@@ -1,0 +1,515 @@
+namespace = hg_game_start
+
+# Prepare Estates
+event = {
+  id = hg_game_start.1
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    log = "hg_game_start.1 : Prepare Estates"
+    every_playable_country = {
+      limit = { is_ai = no }
+      country_event = { id = hg_game_start.10 }
+      country_event = { id = hg_game_start.20 }
+      country_event = { id = hg_game_start.30 }
+    }
+  }
+}
+
+# Prepare home system
+country_event = {
+  id = hg_game_start.10
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    # Set Homeworld Size
+    log = "hg_game_start.10 : Set homeworld size 20"
+    ROOT.capital_scope = {
+      set_planet_size = 20
+      set_planet_flag = estate_capital
+    }
+    ROOT.capital_scope.solar_system = {
+      set_star_flag = estate_grounds
+    }
+  }
+}
+
+# Prepare core sector
+country_event = {
+  id = hg_game_start.20
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    log = "hg_game_start.20"
+    # Create starbases and break habitable planets
+    every_system = {
+      limit = {
+        distance = {
+        	source = ROOT.capital_scope.solar_system
+        	min_jumps = 1
+        	max_jumps = 4
+        }
+      }
+
+      # Create starbases
+      log = "hg_game_start.3 : Create starbases"
+      create_starbase = { owner = ROOT size = starbase_outpost }
+      #add_claims = { who = ROOT num_of_claims = 1 show_notification = no }
+
+      # Break habitable planets
+      log = "Shatter habitable planets"
+      every_system_planet = {
+        limit = { is_colonizable = yes }
+        change_pc = pc_shattered
+        set_planet_flag = estate_potential
+        PREV = { set_star_flag = estate_potential }
+      }
+		}
+
+    # Label boundary systems
+    every_system = {
+      limit = {
+        distance = {
+          source = ROOT.capital_scope.solar_system
+          min_jumps = 4
+          max_jumps = 4
+        }
+      }
+      every_neighbor_system = {
+        limit = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 5
+            max_jumps = 5
+          }
+        }
+        PREV = { set_name = "BOUNDARY" }
+      }
+    }
+	}
+}
+
+
+# Generate guaranteed habitable planets
+country_event = {
+  id = hg_game_start.30
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    log = "hg_game_start.30"
+    # Set up planets
+    # 1st estate planet
+     every_system = {
+      limit = {
+         AND = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 4
+          }
+          has_star_flag = neighbor_t1_first_colony
+        }
+      }
+      save_event_target_as = estate_1_star
+      random_system_planet = {
+        limit = {
+          has_planet_flag = prescripted_ideal
+        }
+        log = "E1 : Using T1 colony"
+        save_event_target_as = estate_1
+      }
+    }
+    # Use Estate Potential
+    if = {
+      limit = {
+        NOT = {
+          exists = event_target:estate_1
+        }
+      }
+      random_system = {
+        limit = {
+          AND = {
+            distance = {
+              source = ROOT.capital_scope.solar_system
+              min_jumps = 1
+              max_jumps = 4
+            }
+            has_star_flag = estate_potential
+          }
+        }
+        save_event_target_as = estate_1_star
+        random_system_planet = {
+          limit = {
+            has_planet_flag = estate_potential
+          }
+          log = "E1 : Using estate potential "
+          save_event_target_as = estate_1
+        }
+      }
+    }
+    # Use a random planet (worst case)
+    if = {
+      limit = {
+        NOT = {
+          exists = event_target:estate_1
+        }
+      }
+      random_system = {
+        limit = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 1
+          }
+        }
+        save_event_target_as = estate_1_star
+        random_system_planet = {
+          limit = {
+            is_colonizable = no
+          }
+          log = "E1 : Using random"
+          save_event_target_as = estate_1
+        }
+      }
+    }
+    if = {
+      limit = {
+        exists = event_target:estate_1
+      }
+      event_target:estate_1 = {
+        set_planet_size = 18
+        #set_planet_name = "E1"
+        remove_planet_flag = estate_potential
+        set_planet_flag = estate_planet
+      }
+    } else = {
+      log_error = "hg_game_start.30 : estate_1 does not exist"
+    }
+    event_target:estate_1_star = {
+      if = {
+        limit = {
+          count_system_planet = {
+            limit = { has_planet_flag = estate_potential }
+            count = 0
+          }
+        }
+        log = "Removing star flag 1"
+        remove_star_flag = estate_potential
+      }
+    }
+
+    # 2nd estate planet
+    #Use T2 Colony
+    every_system = {
+      limit = {
+        AND = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 4
+          }
+          has_star_flag = neighbor_t2_first_colony
+        }
+      }
+      save_event_target_as = estate_2_star
+      random_system_planet = {
+        limit = {
+          has_planet_flag = prescripted_ideal
+        }
+        log = "E2 : Using T2 colony"
+        save_event_target_as = estate_2
+      }
+    }
+    # Use Estate Potential
+    if = {
+      limit = {
+        NOT = {
+          exists = event_target:estate_2
+        }
+      }
+      random_system = {
+        limit = {
+          AND = {
+            distance = {
+              source = ROOT.capital_scope.solar_system
+              min_jumps = 1
+              max_jumps = 4
+            }
+            has_star_flag = estate_potential
+          }
+        }
+        save_event_target_as = estate_2_star
+        random_system_planet = {
+          limit = {
+            has_planet_flag = estate_potential
+          }
+          log = "E2 : Using estate potential "
+          save_event_target_as = estate_2
+        }
+      }
+    }
+    # Use a random planet (worst case)
+    if = {
+      limit = {
+        NOT = {
+          exists = event_target:estate_2
+        }
+      }
+      random_system = {
+        limit = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 1
+          }
+        }
+        save_event_target_as = estate_2_star
+        random_system_planet = {
+          limit = {
+            is_colonizable = no
+          }
+          log = "E2 : Using random"
+          save_event_target_as = estate_2
+        }
+      }
+    }
+    if = {
+      limit = {
+        exists = event_target:estate_2
+      }
+      event_target:estate_2 = {
+        set_planet_size = 16
+        #set_planet_name = "E2"
+        remove_planet_flag = estate_potential
+        set_planet_flag = estate_planet
+      }
+    } else = {
+      log_error = "hg_game_start.30 : estate_2 does not exist"
+    }
+    event_target:estate_2_star = {
+      if = {
+        limit = {
+          count_system_planet = {
+            limit = { has_planet_flag = estate_potential }
+            count = 0
+          }
+        }
+        log = "Removing star flag 2"
+        remove_star_flag = estate_potential
+      }
+    }
+
+    # 3rd estate planet
+    # Use Estate Potential
+    random_system = {
+      limit = {
+        AND = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 4
+          }
+          has_star_flag = estate_potential
+        }
+      }
+      save_event_target_as = estate_3_star
+      random_system_planet = {
+        limit = {
+          has_planet_flag = estate_potential
+        }
+        log = "E3 : Using estate potential "
+        save_event_target_as = estate_3
+      }
+    }
+    # Use a random planet (worst case)
+    if = {
+      limit = {
+        NOT = {
+          exists = event_target:estate_3
+        }
+      }
+      random_system = {
+        limit = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 1
+          }
+        }
+        save_event_target_as = estate_3_star
+        random_system_planet = {
+          limit = {
+            is_colonizable = no
+          }
+          log = "E3 : Using random"
+          save_event_target_as = estate_3
+        }
+      }
+    }
+    if = {
+      limit = {
+        exists = event_target:estate_3
+      }
+      event_target:estate_3 = {
+        set_planet_size = 14
+        #set_planet_name = "E3"
+        remove_planet_flag = estate_potential
+        set_planet_flag = estate_planet
+      }
+    } else = {
+      log_error = "hg_game_start.30 : estate_3 does not exist"
+    }
+    event_target:estate_3_star = {
+      if = {
+        limit = {
+          count_system_planet = {
+            limit = { has_planet_flag = estate_potential }
+            count = 0
+          }
+        }
+        log = "Removing star flag 3"
+        remove_star_flag = estate_potential
+      }
+    }
+
+    # 4th estate planet
+    # Use Estate Potential
+    random_system = {
+      limit = {
+        AND = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 4
+          }
+          has_star_flag = estate_potential
+        }
+      }
+      save_event_target_as = estate_4_star
+      random_system_planet = {
+        limit = {
+          has_planet_flag = estate_potential
+        }
+        log = "E4 : Using estate potential "
+        save_event_target_as = estate_4
+      }
+    }
+    # Use a random planet (worst case)
+    if = {
+      limit = {
+        NOT = {
+          exists = event_target:estate_4
+        }
+      }
+      random_system = {
+        limit = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 1
+          }
+        }
+        save_event_target_as = estate_4_star
+        random_system_planet = {
+          limit = {
+            is_colonizable = no
+          }
+          log = "E4 : Using random"
+          save_event_target_as = estate_4
+        }
+      }
+    }
+    if = {
+      limit = {
+        exists = event_target:estate_4
+      }
+      event_target:estate_4 = {
+        set_planet_size = 12
+        #set_planet_name = "E4"
+        remove_planet_flag = estate_potential
+        set_planet_flag = estate_planet
+      }
+    } else = {
+      log_error = "hg_game_start.30 : estate_4 does not exist"
+    }
+    event_target:estate_4_star = {
+      if = {
+        limit = {
+          count_system_planet = {
+            limit = { has_planet_flag = estate_potential }
+            count = 0
+          }
+        }
+        log = "Removing star flag 4"
+        remove_star_flag = estate_potential
+      }
+    }
+
+    # Set estate planets to ideal planet class
+    every_system = {
+      limit = {
+        distance = {
+          source = ROOT.capital_scope.solar_system
+          min_jumps = 1
+          max_jumps = 4
+        }
+      }
+      every_system_planet = {
+        limit = {
+          has_planet_flag = estate_planet
+        }
+        log = "Set ideal class"
+        # Default to Gaia
+        change_pc = pc_arid
+        # Change to ideal class
+        if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_arid } }
+          change_pc = pc_arid
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_desert } }
+          change_pc = pc_desert
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_savannah } }
+          change_pc = pc_savannah
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_alpine } }
+          change_pc = pc_alpine
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_arctic } }
+          change_pc = pc_arctic
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_tundra } }
+          change_pc = pc_tundra
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_continental } }
+          change_pc = pc_continental
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_ocean } }
+          change_pc = pc_ocean
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_tropical } }
+          change_pc = pc_tropical
+        }
+        else_if = {
+          limit = { ROOT.owner = { ideal_planet_class = pc_nuked } }
+          change_pc = pc_nuked
+        }
+        # Reset the deposits/modifiers on the estates
+        reroll_deposits = yes
+        #reroll_planet_modifiers = yes
+      }
+    }
+  }
+}

@@ -1,0 +1,112 @@
+namespace = hg_debug
+
+# Debug states
+event = {
+  id = hg_debug.1
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    log = "hg_debug.1"
+    every_playable_country = {
+      limit = {
+        AND = {
+          is_ai = no
+        }
+      }
+      country_event = { id = hg_debug.10 }
+      country_event = { id = hg_debug.20 }
+      country_event = { id = hg_debug.30 }
+    }
+  }
+}
+
+# Basic setup, clear vision
+country_event = {
+  id = hg_debug.10
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    log = "hg_debug.10 : Clear uncharted"
+    clear_uncharted_space = ROOT.capital_scope.solar_system
+  }
+}
+
+# At war, estate grounds occupied
+country_event = {
+  id = hg_debug.20
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    log = "hg_debug.20 : At war, estate grounds occupied"
+    random_playable_country = {
+      limit = { is_ai = yes }
+      save_event_target_as = war_country
+    }
+    random_system = {
+      limit = {
+        AND = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 1
+          }
+          NOT = {
+            has_star_flag = estate_grounds
+          }
+        }
+      }
+      create_starbase = { owner = event_target:war_country size = starbase_outpost }
+      save_event_target_as = war_system
+      set_star_flag = estate_grounds
+    }
+
+    establish_contact = { who = event_target:war_country location = event_target:war_system }
+    add_intel = { amount = 100 who = event_target:war_country }
+    every_active_first_contact = {
+      set_first_contact_stage = default_end_stage_cautious
+      finish_first_contact = yes
+    }
+    declare_war = { target = event_target:war_country attacker_war_goal = "wg_humiliation" }
+  }
+}
+
+country_event = {
+  id = hg_debug.30
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    log = "hg_debug.30 : Lost system, not at war"
+    random_playable_country = {
+      limit = { is_ai = yes }
+      save_event_target_as = war_country
+    }
+    random_system = {
+      limit = {
+        AND = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 1
+            max_jumps = 1
+          }
+          NOT = {
+            has_star_flag = estate_grounds
+          }
+        }
+      }
+      create_starbase = { owner = event_target:war_country size = starbase_outpost }
+      save_event_target_as = war_system
+      set_star_flag = estate_grounds
+    }
+
+    establish_contact = { who = event_target:war_country location = event_target:war_system }
+    add_intel = { amount = 100 who = event_target:war_country }
+    every_active_first_contact = {
+      set_first_contact_stage = default_end_stage_cautious
+      finish_first_contact = yes
+    }
+  }
+}

@@ -1,0 +1,95 @@
+namespace = hg_monthly_pulse
+
+# Protect the estates
+event = {
+  id = hg_monthly_pulse.1
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    #log = "hg_monthly_pulse.1"
+    every_playable_country = {
+      limit = { is_ai = no }
+      # Restore capital
+      #country_event = { id = hg_monthly_pulse.10 }
+      # Restore Estate grounds
+      country_event = { id = hg_monthly_pulse.20 }
+    }
+  }
+}
+
+# Restore capital
+country_event = {
+  id = hg_monthly_pulse.10
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    log "hg_monthly_pulse.10"
+    log "Restore capital"
+    every_system = {
+      limit = {
+      }
+    }
+  }
+}
+
+# Mark owned estate grounds
+country_event = {
+  id = hg_monthly_pulse.20
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    #log "hg_monthly_pulse.20"
+    #log "Setting estate_grounds"
+    every_system_within_border = {
+      limit = {
+        AND = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 0
+            max_jumps = 4
+          }
+          NOT = {
+            has_star_flag = estate_grounds
+          }
+        }
+      }
+      set_star_flag = estate_grounds
+    }
+    country_event = { id = hg_monthly_pulse.21 }
+  }
+}
+
+# Restore owned estate grounds
+country_event = {
+  id = hg_monthly_pulse.21
+  hide_window = yes
+  is_triggered_only = yes
+
+  immediate = {
+    #log "hg_monthly_pulse.21"
+    every_system = {
+      limit = {
+        AND = {
+          distance = {
+            source = ROOT.capital_scope.solar_system
+            min_jumps = 0
+            max_jumps = 4
+          }
+          has_star_flag = estate_grounds
+          NOT = {
+            starbase = { controller = { is_at_war_with = ROOT } }
+          }
+          NOT = {
+            starbase = { owner = { is_country = ROOT } }
+          }
+        }
+      }
+      starbase = {
+        set_owner = ROOT
+      }
+    }
+  }
+}

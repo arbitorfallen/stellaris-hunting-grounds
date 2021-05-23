@@ -1,0 +1,14 @@
+# Triggers when the game starts
+on_game_start = {
+	events = {
+		hg_game_start.1
+		#hg_debug.1
+	}
+}
+
+# this = country
+on_monthly_pulse = {
+	events = {
+		hg_monthly_pulse.1
+	}
+}
